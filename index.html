@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đăng Ký Cơm Hằng Ngày</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- THANH ĐIỀU HƯỚNG CHÍNH (NAVBAR)            -->
+    <!-- ========================================== -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm sticky-top">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand d-flex align-items-center" href="#login">
+                <span class="fs-4 me-2">🍚</span>
+                <span>HỆ THỐNG ĐĂNG KÝ CƠM</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <!-- Danh sách Menu theo quyền -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="mainNavbarNav">
+                    <!-- Render động bởi app.js -->
+                </ul>
+
+                <!-- Trạng thái kết nối Cloud Database -->
+                <div class="d-flex align-items-center ms-lg-3 mt-2 mt-lg-0">
+                    <span id="cloudStatusBadge" class="badge bg-warning text-dark d-flex align-items-center p-2" 
+                          style="cursor: pointer;" onclick="App.showCloudGuideModal()"
+                          title="Bấm để xem hướng dẫn kết nối Firebase Cloud">
+                        💾 LocalStorage (Chưa nối Cloud)
+                    </span>
+                </div>
+
+                <!-- Thông tin người dùng & Đăng xuất -->
+                <div class="d-flex align-items-center" id="userNavInfo">
+                    <!-- Render động bởi app.js -->
+                </div>
+
+                <!-- Nút Reset dữ liệu demo -->
+                <button class="btn btn-outline-warning btn-sm ms-lg-2 mt-2 mt-lg-0" 
+                        onclick="if(confirm('Khôi phục toàn bộ dữ liệu mẫu ban đầu?')) DB.resetDatabase()"
+                        title="Khôi phục lại dữ liệu ban đầu">
+                    🔄 Reset Dữ Liệu
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- KHUNG THÔNG BÁO TOAST -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+
+    <!-- ========================================== -->
+    <!-- NỘI DUNG CHÍNH (MAIN VIEWS)                -->
+    <!-- ========================================== -->
+    <main class="container my-4">
+
+        <!-- 1. MÀN HÌNH ĐĂNG NHẬP -->
+        <section id="view-login" class="app-view">
+            <div class="row justify-content-center pt-3">
+                <div class="col-md-5 col-lg-4">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-success text-white text-center py-3">
+                            <h4 class="mb-0 fw-bold">ĐĂNG NHẬP HỆ THỐNG</h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Tên tài khoản</label>
+                                    <input type="text" id="loginUsername" class="form-control" 
+                                           placeholder="Nhập tên tài khoản" required autofocus>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Mật khẩu</label>
+                                    <input type="password" id="loginPassword" class="form-control" 
+                                           placeholder="Nhập mật khẩu" required>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
+                                    ĐĂNG NHẬP
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <!-- Bảng phím tắt đăng nhập nhanh để test -->
+                            <div class="small">
+                                <p class="fw-bold text-muted mb-2">⚡ Đăng nhập nhanh để kiểm thử:</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-danger btn-sm text-start" 
+                                            onclick="App.quickLogin('admin', 'Admin@12345')">
+                                        🛡️ <strong>Admin:</strong> admin / Admin@12345
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm text-start" 
+                                            onclick="App.quickLogin('nguyenvana', 'Member@12345')">
+                                        👤 <strong>Thành viên 1:</strong> nguyenvana / Member@12345
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm text-start" 
+                                            onclick="App.quickLogin('tranthib', 'Member@12345')">
+                                        👤 <strong>Thành viên 2:</strong> tranthib / Member@12345
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. MÀN HÌNH ĐĂNG KÝ CƠM (THÀNH VIÊN) -->
+        <section id="view-meal-register" class="app-view d-none">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-success">ĐĂNG KÝ CƠM HẰNG NGÀY</h2>
+                <p class="text-muted">Vui lòng chọn trạng thái ăn cho từng bữa trước giờ khóa quy định.</p>
+            </div>
+
+            <!-- Vùng hiển thị thông báo nhắc nhở -->
+            <div id="mealRemindersAlert" class="mb-4 d-none"></div>
+
+            <!-- Thẻ thông tin Thành viên & Ngày đăng ký -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label text-muted small mb-1">Thành viên đăng ký:</label>
+                            <h5 class="fw-bold text-dark mb-0" id="memberDisplayName">-</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Chọn ngày đăng ký:</label>
+                            <input type="date" id="mealRegisterDate" class="form-control" 
+                                   onchange="App.handleDateChange(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Khung bữa ăn trong ngày -->
+            <div class="row" id="mealCardsContainer">
+                <!-- Render động bởi app.js -->
+            </div>
+
+            <!-- Nút xác nhận lưu -->
+            <div class="text-center mt-3 mb-5">
+                <button type="button" class="btn btn-success btn-lg px-5 fw-bold shadow" 
+                        onclick="App.saveMealRegistration()">
+                    💾 XÁC NHẬN ĐĂNG KÝ
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. MÀN HÌNH LỊCH SỬ ĐĂNG KÝ (THÀNH VIÊN) -->
+        <section id="view-meal-history" class="app-view d-none">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-success">LỊCH SỬ ĐĂNG KÝ CƠM</h2>
+                <p class="text-muted">Theo dõi và kiểm tra tình trạng đăng ký các bữa ăn của bạn.</p>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Lọc theo ngày:</label>
+                            <input type="date" id="historyFilterDate" class="form-control" 
+                                   onchange="App.renderMealHistory()">
+                        </div>
+                        <div class="col-md-3 mt-3 mt-md-0">
+                            <button class="btn btn-outline-secondary w-100" 
+                                    onclick="document.getElementById('historyFilterDate').value=''; App.renderMealHistory()">
+                                Xem tất cả
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle mb-0">
+                            <thead class="table-success">
+                                <tr>
+                                    <th style="width: 60px;">STT</th>
+                                    <th>Ngày</th>
+                                    <th>Bữa ăn</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời điểm đăng ký</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberHistoryTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. MÀN HÌNH QUẢN LÝ ĐĂNG KÝ CƠM (ADMIN) -->
+        <section id="view-admin-meals" class="app-view d-none">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <h2 class="fw-bold text-dark mb-2 mb-md-0">QUẢN LÝ ĐĂNG KÝ CƠM</h2>
+                <div>
+                    <a href="#admin-override" class="btn btn-primary me-2">
+                        + Đăng ký cơm thay
+                    </a>
+                    <a href="#admin-history" class="btn btn-info text-white me-2">
+                        🕒 Lịch sử thay đổi
+                    </a>
+                    <a href="#admin-stats" class="btn btn-success">
+                        📊 Thống kê suất ăn
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Chọn ngày xem danh sách:</label>
+                            <input type="date" id="adminMealDate" class="form-control" 
+                                   onchange="App.handleAdminDateChange(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 60px;">STT</th>
+                                    <th class="text-start">Thành viên</th>
+                                    <th>Bữa ăn</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời điểm đăng ký</th>
+                                    <th class="text-start">Lý do ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminMealTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. MÀN HÌNH ĐĂNG KÝ CƠM THAY (ADMIN OVERRIDE) -->
+        <section id="view-admin-override" class="app-view d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">ĐĂNG KÝ CƠM THAY / GHI ĐÈ</h2>
+                <a href="#admin-meals" class="btn btn-outline-secondary">⬅️ Quay lại danh sách</a>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        ℹ️ <strong>Quy định:</strong> Quản trị viên chỉ được phép đăng ký thay cho thành viên 
+                        <strong>sau khi bữa ăn đó đã quá hạn khóa đăng ký</strong>. Bắt buộc phải nhập lý do cụ thể.
+                    </div>
+
+                    <form id="overrideForm" onsubmit="event.preventDefault(); App.submitAdminOverride();">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Thành viên <span class="text-danger">*</span></label>
+                                <select id="overrideMemberSelect" class="form-select" required>
+                                    <!-- Render động -->
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Ngày đăng ký <span class="text-danger">*</span></label>
+                                <input type="date" id="overrideDate" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Bữa ăn <span class="text-danger">*</span></label>
+                                <select id="overrideMealType" class="form-select" required>
+                                    <option value="0">Bữa sáng (Khóa lúc 03:30)</option>
+                                    <option value="1">Bữa trưa (Khóa lúc 08:00)</option>
+                                    <option value="2">Bữa chiều (Khóa lúc 14:00)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Trạng thái mới <span class="text-danger">*</span></label>
+                                <select id="overrideStatus" class="form-select" required>
+                                    <option value="0">Ăn đúng giờ</option>
+                                    <option value="2">Ăn sau</option>
+                                    <option value="1">Không ăn</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Lý do đăng ký thay <span class="text-danger">*</span></label>
+                            <textarea id="overrideReason" class="form-control" rows="3" 
+                                      placeholder="Ví dụ: Bận họp đột xuất, Đi công tác về trễ, Báo qua điện thoại..." required></textarea>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm">
+                                💾 Lưu Đăng Ký Thay
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. MÀN HÌNH LỊCH SỬ CAN THIỆP (AUDIT LOG) -->
+        <section id="view-admin-history" class="app-view d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">LỊCH SỬ ĐĂNG KÝ CƠM THAY</h2>
+                <a href="#admin-meals" class="btn btn-outline-secondary">⬅️ Danh sách cơm</a>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Chọn ngày xem lịch sử:</label>
+                            <input type="date" id="adminHistoryDate" class="form-control" 
+                                   onchange="App.renderAdminHistory(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 50px;">STT</th>
+                                    <th class="text-start">Thành viên</th>
+                                    <th>Bữa ăn</th>
+                                    <th>Trạng thái cũ</th>
+                                    <th>Trạng thái mới</th>
+                                    <th>Người thực hiện</th>
+                                    <th>Thời điểm</th>
+                                    <th class="text-start">Lý do</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminHistoryTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. MÀN HÌNH THỐNG KÊ SUẤT ĂN -->
+        <section id="view-admin-stats" class="app-view d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">THỐNG KÊ SỐ LƯỢNG SUẤT ĂN</h2>
+                <a href="#admin-meals" class="btn btn-outline-secondary">⬅️ Danh sách cơm</a>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Chọn ngày thống kê:</label>
+                            <input type="date" id="adminStatsDate" class="form-control" 
+                                   onchange="App.renderAdminStats(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Bữa ăn</th>
+                                    <th class="text-success">Ăn đúng giờ</th>
+                                    <th class="text-warning">Ăn sau</th>
+                                    <th class="text-secondary">Không ăn</th>
+                                    <th class="text-danger">Chưa đăng ký</th>
+                                    <th class="table-primary text-primary">Tổng dự kiến ăn</th>
+                                    <th>Tổng thành viên</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminStatsTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. MÀN HÌNH QUẢN LÝ THÀNH VIÊN -->
+        <section id="view-admin-members" class="app-view d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">QUẢN LÝ THÀNH VIÊN</h2>
+            </div>
+
+            <!-- Thêm thành viên mới -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Thêm thành viên mới</h5>
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <input type="text" id="newMemberFullName" class="form-control" 
+                                   placeholder="Nhập họ và tên thành viên mới">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success w-100 fw-bold" onclick="App.handleAddMember()">
+                                + Thêm thành viên
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách thành viên -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle mb-0">
+                            <thead class="table-success">
+                                <tr>
+                                    <th style="width: 80px;">Mã</th>
+                                    <th class="text-start">Họ và tên</th>
+                                    <th>Tài khoản</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width: 120px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. MÀN HÌNH CẤP TÀI KHOẢN -->
+        <section id="view-admin-accounts" class="app-view d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">CẤP TÀI KHOẢN ĐĂNG NHẬP</h2>
+            </div>
+
+            <!-- Form cấp tài khoản -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Tạo tài khoản cho thành viên</h5>
+                    <form onsubmit="event.preventDefault(); App.handleCreateAccount();">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Chọn thành viên chưa có tài khoản:</label>
+                                <select id="accountMemberSelect" class="form-select" required>
+                                    <!-- Render động -->
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Tên tài khoản (Username):</label>
+                                <input type="text" id="newAccountUsername" class="form-control" 
+                                       placeholder="Ví dụ: phamminhduc" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Mật khẩu (>= 8 ký tự, có số, chữ thường):</label>
+                                <input type="text" id="newAccountPassword" class="form-control" 
+                                       placeholder="Ví dụ: Member@12345" required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary fw-bold px-4">
+                                🔑 Cấp tài khoản
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách tài khoản đã cấp -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white fw-bold">
+                    Danh sách tài khoản trong hệ thống
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;">STT</th>
+                                    <th class="text-start">Thành viên</th>
+                                    <th>Tên tài khoản</th>
+                                    <th>Vai trò</th>
+                                    <th>Mật khẩu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody">
+                                <!-- Render động bởi app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- WIDGET GIẢ LẬP THỜI GIAN (TIME SIMULATOR)   -->
+    <!-- ========================================== -->
+    <div id="timeSimulatorWidget" class="time-simulator-widget collapsed">
+        <div class="widget-header" onclick="App.toggleSimulatorWidget()">
+            <span>⏰ <span id="simClockDisplay">Đang tải...</span></span>
+            <span class="badge bg-light text-dark small">Tùy chỉnh giờ</span>
+        </div>
+        <div class="widget-body">
+            <p class="text-muted small mb-2">
+                Chuyển nhanh thời gian hệ thống để kiểm tra tự động khóa hoặc đăng ký thay:
+            </p>
+            <div class="d-flex flex-wrap">
+                <button class="btn btn-outline-success btn-preset" onclick="App.setSimulatedPreset(3, 0)">
+                    🌅 03:00 (Trước hạn Sáng)
+                </button>
+                <button class="btn btn-outline-danger btn-preset" onclick="App.setSimulatedPreset(4, 0)">
+                    ⏳ 04:00 (Sau hạn Sáng)
+                </button>
+                <button class="btn btn-outline-primary btn-preset" onclick="App.setSimulatedPreset(7, 30)">
+                    ☀️ 07:30 (Trước hạn Trưa)
+                </button>
+                <button class="btn btn-outline-danger btn-preset" onclick="App.setSimulatedPreset(8, 30)">
+                    ⏳ 08:30 (Sau hạn Trưa)
+                </button>
+                <button class="btn btn-outline-warning btn-preset text-dark" onclick="App.setSimulatedPreset(13, 30)">
+                    🌇 13:30 (Trước hạn Chiều)
+                </button>
+                <button class="btn btn-outline-danger btn-preset" onclick="App.setSimulatedPreset(14, 30)">
+                    ⏳ 14:30 (Sau hạn Chiều)
+                </button>
+            </div>
+            <div class="mt-2 pt-2 border-top text-end">
+                <button class="btn btn-sm btn-secondary" onclick="App.resetToRealTime()">
+                    🔄 Dùng giờ thực tế của máy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HƯỚNG DẪN KẾT NỐI FIREBASE CLOUD -->
+    <div class="modal fade" id="cloudGuideModal" tabindex="-1" aria-labelledby="cloudGuideModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="cloudGuideModalLabel">☁️ Kết Nối Google Firebase Firestore (Miễn Phí 100%)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info">
+                        <strong>Mục đích:</strong> Kết nối Database Cloud để 100 nhân viên có thể dùng điện thoại đăng ký cơm đồng thời và dữ liệu tự động đồng bộ Realtime!
+                    </div>
+
+                    <h6 class="fw-bold text-success mb-2">📋 4 Bước Kết Nối Nhanh:</h6>
+                    <ol class="small mb-3">
+                        <li class="mb-2">Truy cập <a href="https://console.firebase.google.com/" target="_blank" class="fw-bold">console.firebase.google.com</a> và đăng nhập tài khoản Google.</li>
+                        <li class="mb-2">Bấm <strong>Add project</strong> &gt; Đặt tên (vd: <code>DangKyCom</code>).</li>
+                        <li class="mb-2">Tại menu bên trái: Chọn <strong>Build &gt; Firestore Database</strong> &gt; Bấm <strong>Create database</strong> (chọn vị trí <em>asia-southeast1 - Singapore</em> và chọn <em>Start in test mode</em>).</li>
+                        <li class="mb-2">Bấm vào biểu tượng <strong>Bánh răng (Project Settings)</strong> &gt; Cuộn xuống chọn Web <strong>(&lt;/&gt;)</strong> để lấy mã <code>firebaseConfig</code>.</li>
+                    </ol>
+
+                    <h6 class="fw-bold text-success mb-2">📁 Dán cấu hình vào file:</h6>
+                    <p class="small text-muted mb-2">Mở file <code class="text-danger fw-bold">js/firebase-config.js</code> trong mã nguồn và dán mã config của bạn vào đó. Sau đó lưu lại và tải lại trang!</p>
+
+                    <div class="border rounded p-3 bg-light mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-dark">Đồng bộ dữ liệu mẫu lên Cloud</strong>
+                                <p class="text-muted small mb-0">Tải 10 thành viên và các bản ghi mẫu từ máy tính này lên Cloud Firestore.</p>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="DB.syncAllToCloud()">
+                                🚀 Đẩy Dữ Liệu Lên Cloud
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCRIPTS                                    -->
+    <!-- ========================================== -->
+    <!-- Firebase SDK v10 (Compat Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/timeSimulator.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/mealService.js"></script>
+    <script src="js/adminService.js"></script>
+    <script src="js/memberService.js"></script>
+    <script src="js/scheduler.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
