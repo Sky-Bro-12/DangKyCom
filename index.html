@@ -114,27 +114,6 @@
                                     ĐĂNG NHẬP
                                 </button>
                             </form>
-
-                            <hr class="my-4">
-
-                            <!-- Bảng phím tắt đăng nhập nhanh để test -->
-                            <div class="small">
-                                <p class="fw-bold text-muted mb-2">⚡ Đăng nhập nhanh để kiểm thử:</p>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-danger btn-sm text-start"
-                                        onclick="App.quickLogin('admin', 'Admin@12345')">
-                                        🛡️ <strong>Admin:</strong> admin / Admin@12345
-                                    </button>
-                                    <button class="btn btn-outline-primary btn-sm text-start"
-                                        onclick="App.quickLogin('nguyenvana', 'Member@12345')">
-                                        👤 <strong>Thành viên 1:</strong> nguyenvana / Member@12345
-                                    </button>
-                                    <button class="btn btn-outline-primary btn-sm text-start"
-                                        onclick="App.quickLogin('tranthib', 'Member@12345')">
-                                        👤 <strong>Thành viên 2:</strong> tranthib / Member@12345
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -742,19 +721,47 @@
 
                 <!-- Thêm thành viên mới -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold mb-3">Thêm thành viên mới</h5>
-                        <div class="row g-2">
-                            <div class="col-md-8">
-                                <input type="text" id="newMemberFullName" class="form-control"
-                                    placeholder="Nhập họ và tên thành viên mới">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title fw-bold mb-0 text-success">➕ Thêm Thành Viên & Cấp Tài Khoản Mới</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="newMemberForm" onsubmit="event.preventDefault(); App.handleAddMember();">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small text-secondary">Họ và tên <span class="text-danger">*</span></label>
+                                    <input type="text" id="newMemberFullName" class="form-control"
+                                        placeholder="Ví dụ: Nguyễn Văn An" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small text-secondary">Phòng / Tổ</label>
+                                    <input type="text" id="newMemberDepartment" class="form-control"
+                                        placeholder="Ví dụ: Phòng Kỹ thuật / Tổ 1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small text-secondary">Tên tài khoản</label>
+                                    <input type="text" id="newMemberUsername" class="form-control"
+                                        placeholder="Ví dụ: nguyenvana">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold small text-secondary">Mật khẩu</label>
+                                    <div class="input-group">
+                                        <input type="text" id="newMemberPassword" class="form-control font-monospace"
+                                            placeholder="Mặc định: Member@12345" value="Member@12345">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="App.generateRandomPassword('newMemberPassword')" title="Tạo mật khẩu ngẫu nhiên">
+                                            🎲
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2">
+                                    <div class="text-muted small">
+                                        ℹ️ <em>Mã thành viên sẽ tự động được đánh số (1..N) theo thứ tự <strong>A-Z theo tên</strong> (từ cuối cùng của họ tên).</em>
+                                    </div>
+                                    <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                                        + Thêm Thành Viên
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-success w-100 fw-bold" onclick="App.handleAddMember()">
-                                    + Thêm thành viên
-                                </button>
-                            </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
@@ -765,11 +772,13 @@
                             <table class="table table-bordered table-hover text-center align-middle mb-0">
                                 <thead class="table-success">
                                     <tr>
-                                        <th style="width: 80px;">Mã</th>
+                                        <th style="width: 70px;" title="Mã theo thứ tự 1..N theo A-Z của tên">Mã</th>
                                         <th class="text-start">Họ và tên</th>
-                                        <th>Tài khoản</th>
-                                        <th>Trạng thái</th>
-                                        <th style="width: 200px;">Thao tác</th>
+                                        <th style="width: 160px;">Phòng / Tổ</th>
+                                        <th style="width: 140px;">Tài khoản</th>
+                                        <th style="width: 140px;">Mật khẩu</th>
+                                        <th style="width: 140px;">Trạng thái</th>
+                                        <th style="width: 220px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="membersTableBody">
@@ -1098,6 +1107,74 @@
                         🗑️ XÁC NHẬN XÓA VĨNH VIỄN
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA THÔNG TIN THÀNH VIÊN (DÀNH CHO ADMIN) -->
+    <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="editMemberModalLabel">✏️ Chỉnh Sửa Thông Tin Thành Viên</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editMemberForm" onsubmit="event.preventDefault(); App.handleSaveEditMember();">
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="editMemberId">
+
+                        <div class="alert alert-info py-2 px-3 small mb-3">
+                            ℹ️ <strong>Quy tắc hệ thống:</strong> Thành viên luôn được sắp xếp <strong>A-Z theo tên</strong> (từ cuối cùng của họ tên). <strong>Mã thành viên</strong> luôn đánh số liên tục từ 1 đến hết. Khi chỉnh sửa tên hoặc xóa thành viên, mã sẽ tự động cập nhật lại.
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold small text-secondary">Mã thành viên</label>
+                                <input type="text" id="editMemberCode" class="form-control text-center fw-bold bg-light" readonly
+                                    title="Mã tự động theo thứ tự 1..N theo A-Z của tên">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold small text-secondary">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" id="editMemberFullName" class="form-control fw-bold" required
+                                    placeholder="Nhập họ và tên">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-secondary">Phòng / Tổ</label>
+                                <input type="text" id="editMemberDepartment" class="form-control"
+                                    placeholder="Ví dụ: Phòng Kỹ thuật / Tổ 1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Tên tài khoản</label>
+                                <input type="text" id="editMemberUsername" class="form-control"
+                                    placeholder="Tên đăng nhập">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Mật khẩu</label>
+                                <div class="input-group">
+                                    <input type="text" id="editMemberPassword" class="form-control font-monospace"
+                                        placeholder="Mật khẩu">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="App.generateRandomPassword('editMemberPassword')" title="Tạo mật khẩu ngẫu nhiên">
+                                        🎲
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="editMemberActive" checked>
+                                    <label class="form-check-label fw-bold" for="editMemberActive">
+                                        Trạng thái hoạt động (Cho phép đăng ký cơm)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">
+                            💾 Lưu Thay Đổi
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

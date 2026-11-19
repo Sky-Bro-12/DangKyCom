@@ -297,16 +297,16 @@ const DB = {
 
         // 1. Danh sách Thành viên mẫu (Khởi tạo sẵn 10 thành viên)
         const initialMembers = [
-            { id: 1, fullName: "Nguyễn Văn An", department: "Phòng Kỹ thuật", isActive: true },
-            { id: 2, fullName: "Trần Thị Bình", department: "Phòng Kế toán", isActive: true },
-            { id: 3, fullName: "Lê Hoàng Cường", department: "Phòng Kinh doanh", isActive: true },
-            { id: 4, fullName: "Phạm Minh Đức", department: "Phòng Nhân sự", isActive: true },
-            { id: 5, fullName: "Võ Thị Em", department: "Phòng Kỹ thuật", isActive: true },
-            { id: 6, fullName: "Đặng Quốc Hưng", department: "Phòng Marketing", isActive: true },
-            { id: 7, fullName: "Bùi Thị Mai", department: "Phòng Kế toán", isActive: true },
-            { id: 8, fullName: "Hoàng Văn Nam", department: "Phòng Kỹ thuật", isActive: true },
-            { id: 9, fullName: "Đỗ Thu Trang", department: "Phòng Kinh doanh", isActive: true },
-            { id: 10, fullName: "Ngô Quang Tuấn", department: "Ban Giám đốc", isActive: true }
+            { id: 1, code: 1, fullName: "Nguyễn Văn An", department: "Phòng Kỹ thuật", isActive: true },
+            { id: 2, code: 2, fullName: "Trần Thị Bình", department: "Phòng Kế toán", isActive: true },
+            { id: 3, code: 3, fullName: "Lê Hoàng Cường", department: "Phòng Kinh doanh", isActive: true },
+            { id: 4, code: 4, fullName: "Phạm Minh Đức", department: "Phòng Nhân sự", isActive: true },
+            { id: 5, code: 5, fullName: "Võ Thị Em", department: "Phòng Kỹ thuật", isActive: true },
+            { id: 6, code: 6, fullName: "Đặng Quốc Hưng", department: "Phòng Marketing", isActive: true },
+            { id: 7, code: 7, fullName: "Bùi Thị Mai", department: "Phòng Kế toán", isActive: true },
+            { id: 8, code: 8, fullName: "Hoàng Văn Nam", department: "Phòng Kỹ thuật", isActive: true },
+            { id: 9, code: 9, fullName: "Đỗ Thu Trang", department: "Phòng Kinh doanh", isActive: true },
+            { id: 10, code: 10, fullName: "Ngô Quang Tuấn", department: "Ban Giám đốc", isActive: true }
         ];
         this.set(CONFIG.STORAGE_KEYS.MEMBERS, initialMembers);
 

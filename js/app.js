@@ -312,12 +312,7 @@ const App = {
         };
     },
 
-    quickLogin(username, password) {
-        document.getElementById("loginUsername").value = username;
-        document.getElementById("loginPassword").value = password;
-        document.getElementById("loginForm").dispatchEvent(new Event("submit"));
-    },
-
+    // quickLogin đã được loại bỏ để tăng cường bảo mật
     handleLogout() {
         AuthService.logout();
         this.showToast("Đã đăng xuất thành công!", "info");
@@ -1489,15 +1484,33 @@ checkAndTriggerBrowserReminders(now) {
 renderAdminMembers() {
     const members = MemberService.getAllMembers();
     const tbody = document.getElementById("membersTableBody");
+    if (!tbody) return;
+
+    if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Chưa có thành viên nào trong hệ thống.</td></tr>`;
+        return;
+    }
 
     tbody.innerHTML = members.map(m => `
             <tr>
-                <td>${m.id}</td>
-                <td class="text-start fw-bold">${m.fullName}</td>
+                <td class="text-center">
+                    <span class="badge bg-light text-dark border px-2 py-1 fw-bold fs-6">#${m.code || m.id}</span>
+                </td>
+                <td class="text-start">
+                    <span class="fw-bold text-dark">${m.fullName}</span>
+                </td>
+                <td class="text-center">
+                    ${m.department ? `<span class="badge bg-info text-dark">${m.department}</span>` : `<span class="text-muted small">-</span>`}
+                </td>
                 <td>
                     ${m.hasAccount
-            ? `<span class="badge bg-success">Đã có (${m.userName})</span>`
+            ? `<code class="fw-bold text-primary">${m.userName}</code>`
             : '<span class="badge bg-secondary">Chưa cấp</span>'}
+                </td>
+                <td>
+                    ${m.password
+            ? `<code class="text-secondary">${m.password}</code>`
+            : '<span class="text-muted small">Chưa có</span>'}
                 </td>
                 <td>
                     ${m.isActive
@@ -1506,13 +1519,17 @@ renderAdminMembers() {
                 </td>
                 <td>
                     <div class="d-flex justify-content-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary"
+                                onclick="App.showEditMemberModal(${m.id})" title="Chỉnh sửa thông tin thành viên (Họ tên, Phòng/Tổ, Tài khoản, Mật khẩu)">
+                            ✏️ Sửa
+                        </button>
                         <button class="btn btn-sm ${m.isActive ? "btn-outline-warning text-dark" : "btn-outline-success"}"
                                 onclick="App.handleToggleMember(${m.id})" title="${m.isActive ? "Vô hiệu hóa tạm thời (Khóa)" : "Mở kích hoạt"}">
                             ${m.isActive ? "Khóa" : "Mở"}
                         </button>
                         <button class="btn btn-sm btn-outline-danger"
                                 onclick="App.confirmDeleteMember(${m.id})" title="Xóa vĩnh viễn cả phần cứng và phần mềm không thể phục hồi">
-                            🗑️ Xóa vĩnh viễn
+                            🗑️ Xóa
                         </button>
                     </div>
                 </td>
@@ -1521,16 +1538,114 @@ renderAdminMembers() {
 },
 
 handleAddMember() {
-    const input = document.getElementById("newMemberFullName");
-    const name = input.value;
-    const result = MemberService.addMember(name);
+    const nameInput = document.getElementById("newMemberFullName");
+    const deptInput = document.getElementById("newMemberDepartment");
+    const userInput = document.getElementById("newMemberUsername");
+    const passInput = document.getElementById("newMemberPassword");
+
+    const fullName = nameInput ? nameInput.value.trim() : "";
+    const department = deptInput ? deptInput.value.trim() : "";
+    const userName = userInput ? userInput.value.trim() : "";
+    const password = passInput ? passInput.value.trim() : "";
+
+    if (!fullName) {
+        this.showToast("Vui lòng nhập họ và tên thành viên!", "warning");
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    const result = MemberService.addMember({
+        fullName,
+        department,
+        userName,
+        password
+    });
 
     if (result.success) {
         this.showToast(result.message, "success");
-        input.value = "";
+        if (nameInput) nameInput.value = "";
+        if (deptInput) deptInput.value = "";
+        if (userInput) userInput.value = "";
+        if (passInput) passInput.value = "Member@12345";
         this.renderAdminMembers();
+        if (this.currentView === "admin-accounts") {
+            this.renderAdminAccounts();
+        }
     } else {
         this.showToast(result.message, "danger");
+    }
+},
+
+showEditMemberModal(memberId) {
+    const member = MemberService.getMemberById(memberId);
+    if (!member) {
+        this.showToast("Không tìm thấy thông tin thành viên!", "danger");
+        return;
+    }
+
+    document.getElementById("editMemberId").value = member.id;
+    document.getElementById("editMemberCode").value = member.code ? `#${member.code}` : `#${member.id}`;
+    document.getElementById("editMemberFullName").value = member.fullName || "";
+    document.getElementById("editMemberDepartment").value = member.department || "";
+    document.getElementById("editMemberUsername").value = member.userName || "";
+    document.getElementById("editMemberPassword").value = member.password || "";
+    document.getElementById("editMemberActive").checked = !!member.isActive;
+
+    const modalEl = document.getElementById("editMemberModal");
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+},
+
+handleSaveEditMember() {
+    const id = document.getElementById("editMemberId").value;
+    const fullName = document.getElementById("editMemberFullName").value.trim();
+    const department = document.getElementById("editMemberDepartment").value.trim();
+    const userName = document.getElementById("editMemberUsername").value.trim();
+    const password = document.getElementById("editMemberPassword").value.trim();
+    const isActive = document.getElementById("editMemberActive").checked;
+
+    if (!fullName) {
+        this.showToast("Họ và tên thành viên không được để trống!", "warning");
+        return;
+    }
+
+    const res = MemberService.updateMember({
+        id,
+        fullName,
+        department,
+        userName,
+        password,
+        isActive
+    });
+
+    if (res.success) {
+        this.showToast(res.message, "success");
+        const modalEl = document.getElementById("editMemberModal");
+        if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+        this.renderAdminMembers();
+        if (this.currentView === "admin-accounts") {
+            this.renderAdminAccounts();
+        }
+    } else {
+        this.showToast(res.message, "danger");
+    }
+},
+
+generateRandomPassword(targetInputId) {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let pw = "Mem@";
+    for (let i = 0; i < 6; i++) {
+        pw += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById(targetInputId);
+    if (input) {
+        input.value = pw;
+        this.showToast(`Đã tạo mật khẩu gợi ý: ${pw}`, "info");
     }
 },
 
@@ -1562,7 +1677,7 @@ confirmDeleteMember(memberId) {
     const btn = document.getElementById("btnConfirmPermanentDelete");
 
     if (nameEl) nameEl.textContent = summary.member.fullName;
-    if (idEl) idEl.textContent = `#${summary.member.id}`;
+    if (idEl) idEl.textContent = `#${summary.member.code || summary.member.id}`;
     if (userEl) userEl.textContent = summary.user ? `${summary.user.userName} (Đang liên kết)` : "Không có tài khoản";
     if (summaryEl) {
         summaryEl.textContent = `${summary.user ? "1 tài khoản đăng nhập, " : ""}${summary.regCount} bản ghi đăng ký cơm, ${summary.histCount} bản ghi lịch sử`;
