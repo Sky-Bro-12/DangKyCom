@@ -1,0 +1,48 @@
+name: Tự Động Nhắc Nhở Đăng Ký Cơm
+
+on:
+  schedule:
+    # Giờ UTC (Việt Nam là UTC+7)
+    # 03:15 sáng VN (UTC 20:15 hôm trước) - Trước giờ chốt bữa sáng 03:30
+    - cron: '15 20 * * *'
+    # 07:45 sáng VN (UTC 00:45) - 15 phút trước giờ chốt bữa trưa 08:00 (Từ thứ 2 đến thứ 7)
+    - cron: '45 0 * * 1-6'
+    # 13:45 chiều VN (UTC 06:45) - 15 phút trước giờ chốt bữa chiều 14:00 (Từ thứ 2 đến thứ 7)
+    - cron: '45 6 * * 1-6'
+  workflow_dispatch:
+    inputs:
+      meal:
+        description: 'Chọn bữa ăn cần gửi nhắc nhở'
+        required: true
+        default: 'lunch'
+        type: choice
+        options:
+          - 'breakfast'
+          - 'lunch'
+          - 'dinner'
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Chạy kịch bản gửi tin nhắn nhắc nhở
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          APP_URL: "https://sky-bro-12.github.io/DangKyCom/"
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            node scripts/send-reminder.js --meal ${{ inputs.meal }}
+          else
+            node scripts/send-reminder.js
+          fi
+

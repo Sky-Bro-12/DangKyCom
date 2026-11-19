@@ -1,24 +1,23 @@
 /**
- * timeSimulator.js - Quản lý và giả lập thời gian hệ thống
- * Phục vụ mục đích kiểm thử các mốc hạn chót (03:30, 08:00, 14:00) mọi lúc.
+ * timeSimulator.js - Quản lý thời gian thực tế hệ thống (Production Mode)
+ * Sử dụng 100% thời gian thực tế của thiết bị / trình duyệt, đảm bảo tính chính xác và an toàn cho dữ liệu thật.
  */
 
+// Xóa triệt để các cờ và dữ liệu thời gian giả lập còn sót lại trong bộ nhớ
+try {
+    localStorage.removeItem("meal_app_simulated_time");
+    localStorage.removeItem("meal_app_simulation_active");
+} catch (e) {}
+
 const TimeSimulator = {
-    // Lấy thời gian hiện tại (thực tế hoặc giả lập)
+    // Luôn trả về thời gian thực tế của thiết bị
     now() {
-        const isSimulated = localStorage.getItem(CONFIG.STORAGE_KEYS.SIMULATION_ACTIVE) === "true";
-        if (isSimulated) {
-            const savedIso = localStorage.getItem(CONFIG.STORAGE_KEYS.SIMULATED_TIME);
-            if (savedIso) {
-                return new Date(savedIso);
-            }
-        }
         return new Date();
     },
 
-    // Kiểm tra có đang bật chế độ giả lập thời gian không
+    // Chế độ giả lập đã bị xóa bỏ hoàn toàn cho môi trường thực tế
     isSimulating() {
-        return localStorage.getItem(CONFIG.STORAGE_KEYS.SIMULATION_ACTIVE) === "true";
+        return false;
     },
 
     // Định dạng chuỗi ngày YYYY-MM-DD
@@ -39,7 +38,7 @@ const TimeSimulator = {
         return `${hours}:${minutes}:${seconds}`;
     },
 
-    // Định dạng ngày giờ chuẩn hiển thị: DD/MM/YYYY HH:mm:ss
+    // Định dạng ngày giờ chuẩn hiển thị: DD/MM/YYYY HH:mm
     formatDateTimeDisplay(date) {
         if (!date) return "";
         const d = typeof date === "string" ? new Date(date) : date;
@@ -54,35 +53,5 @@ const TimeSimulator = {
     // Lấy chuỗi ngày hôm nay YYYY-MM-DD
     getTodayString() {
         return this.formatDate(this.now());
-    },
-
-    // Thiết lập thời gian giả lập
-    setSimulatedTime(dateTime) {
-        const d = typeof dateTime === "string" ? new Date(dateTime) : dateTime;
-        localStorage.setItem(CONFIG.STORAGE_KEYS.SIMULATED_TIME, d.toISOString());
-        localStorage.setItem(CONFIG.STORAGE_KEYS.SIMULATION_ACTIVE, "true");
-        this.triggerChange();
-    },
-
-    // Đặt giờ theo mốc cụ thể trong ngày hôm nay (giờ, phút)
-    setTodayPreset(hours, minutes) {
-        const d = new Date();
-        d.setHours(hours, minutes, 0, 0);
-        this.setSimulatedTime(d);
-    },
-
-    // Trở về giờ thực của thiết bị
-    resetToRealTime() {
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.SIMULATION_ACTIVE);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.SIMULATED_TIME);
-        this.triggerChange();
-    },
-
-    // Bắn sự kiện khi thời gian thay đổi để các màn hình tự làm mới
-    triggerChange() {
-        const event = new CustomEvent("meal_time_changed", {
-            detail: { now: this.now(), isSimulated: this.isSimulating() }
-        });
-        window.dispatchEvent(event);
     }
 };

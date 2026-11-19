@@ -1,17 +1,13 @@
-name: Meal Registration Reminder
+# File mẫu tham khảo cấu hình nhắc nhở. File chạy chính thức tại: .github/workflows/reminder.yml
+name: Meal Registration Reminder (Template)
 
 on:
-  schedule:
-    # 07:45 sáng (UTC 00:45) - 15 phút trước giờ chốt bữa trưa 08:00
-    - cron: '45 0 * * 1-6'
-    # 13:45 chiều (UTC 06:45) - 15 phút trước giờ chốt bữa chiều 14:00
-    - cron: '45 6 * * 1-6'
   workflow_dispatch:
 
 jobs:
-  remind:
+  info:
     runs-on: ubuntu-latest
     steps:
-      - name: Gửi nhắc nhở
+      - name: Hướng dẫn
         run: |
-          echo "Kiểm tra và nhắc nhở thành viên chưa đăng ký cơm trước giờ chốt..."
+          echo "Hệ thống nhắc nhở tự động đã được triển khai tại .github/workflows/reminder.yml"

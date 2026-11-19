@@ -211,6 +211,42 @@ const DB = {
         }
     },
 
+    // Xóa vĩnh viễn dữ liệu thành viên trên Cloud Firestore (Phần cứng đám mây)
+    async deleteMemberFromCloud(memberId, userDocIds = [], regDocIds = [], historyDocIds = []) {
+        if (!this.firestore || !this.isCloudReady) return;
+
+        try {
+            const batch = this.firestore.batch();
+
+            // 1. Xóa document member
+            const memberRef = this.firestore.collection("members").doc(`member_${memberId}`);
+            batch.delete(memberRef);
+
+            // 2. Xóa các users liên quan
+            userDocIds.forEach(uId => {
+                const userRef = this.firestore.collection("users").doc(String(uId));
+                batch.delete(userRef);
+            });
+
+            // 3. Xóa các registrations liên quan
+            regDocIds.forEach(rId => {
+                const regRef = this.firestore.collection("registrations").doc(String(rId));
+                batch.delete(regRef);
+            });
+
+            // 4. Xóa các histories liên quan
+            historyDocIds.forEach(hId => {
+                const histRef = this.firestore.collection("histories").doc(String(hId));
+                batch.delete(histRef);
+            });
+
+            await batch.commit();
+            console.log(`☁️ Đã xóa sạch toàn bộ dữ liệu của thành viên #${memberId} trên Firestore Cloud.`);
+        } catch (e) {
+            console.error(`Lỗi khi xóa dữ liệu thành viên #${memberId} trên Firestore:`, e);
+        }
+    },
+
     // Nút kích hoạt đồng bộ toàn bộ dữ liệu mẫu lên Cloud
     async syncAllToCloud() {
         if (!this.isCloudReady) {
@@ -392,13 +428,6 @@ const DB = {
 
         // Khởi tạo Firebase sau khi đã có dữ liệu khởi điểm
         this.initFirebase();
-    },
-
-    // Khôi phục toàn bộ về dữ liệu mặc định ban đầu
-    resetDatabase() {
-        Object.values(CONFIG.STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-        this.initDatabase(true);
-        window.location.reload();
     }
 };
 

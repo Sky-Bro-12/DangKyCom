@@ -69,49 +69,6 @@ main {
     background-color: #e9ecef;
 }
 
-/* Khung giả lập thời gian (Time Simulator Widget) */
-.time-simulator-widget {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1050;
-    width: 320px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-    border: 2px solid #0d6efd;
-    transition: all 0.3s ease;
-}
-
-.time-simulator-widget.collapsed .widget-body {
-    display: none;
-}
-
-.time-simulator-widget .widget-header {
-    background: #0d6efd;
-    color: white;
-    padding: 8px 14px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.time-simulator-widget .widget-body {
-    padding: 12px;
-    font-size: 0.85rem;
-}
-
-.btn-preset {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    margin: 2px;
-}
-
 /* Bảng thống kê */
 .table th {
     font-weight: 600;
@@ -149,4 +106,63 @@ main {
 .nav-link.active {
     background-color: rgba(255, 255, 255, 0.22);
     font-weight: 600;
+}
+
+/* Hiệu ứng nhấp nháy cho cảnh báo khẩn cấp */
+@keyframes pulseGlow {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-pulse {
+    animation: pulseGlow 1.5s infinite ease-in-out;
+}
+
+.meal-countdown {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* Định dạng in ấn sạch đẹp (A4 / Máy in nhà bếp) */
+@media print {
+    .navbar,
+    .time-simulator-widget,
+    .btn,
+    .toast-container,
+    #cloudStatusBadge,
+    .modal,
+    #publicMealFilterGroup,
+    #publicStatusFilter,
+    #publicMemberSearch,
+    .input-group button {
+        display: none !important;
+    }
+
+    body {
+        background-color: #fff !important;
+        font-size: 11pt;
+    }
+
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    .table {
+        border: 1px solid #333 !important;
+    }
+
+    .table th, .table td {
+        border: 1px solid #ccc !important;
+        padding: 6px 8px !important;
+    }
 }

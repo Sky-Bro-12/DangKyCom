@@ -84,11 +84,47 @@ const MealService = {
             // Kiểm tra đã đăng ký bữa này chưa
             const isRegistered = registrations.some(r => r.mealType === meal.id);
             if (!isRegistered) {
+                const deadlineDate = new Date(todayDate);
+                deadlineDate.setHours(meal.deadlineHour, meal.deadlineMinute, 0, 0);
+
+                const diffMs = deadlineDate - now;
+                const isPastDeadline = diffMs <= 0;
+                const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
+                const remainingMinutes = Math.floor(remainingSeconds / 60);
+                const remainingSecs = remainingSeconds % 60;
+                const isUrgent = !isPastDeadline && remainingMinutes < 30;
+
+                let timeFormatted = "";
+                if (!isPastDeadline) {
+                    if (remainingMinutes >= 60) {
+                        const hours = Math.floor(remainingMinutes / 60);
+                        const mins = remainingMinutes % 60;
+                        timeFormatted = `${hours} giờ ${mins} phút`;
+                    } else {
+                        timeFormatted = `${remainingMinutes} phút ${remainingSecs} giây`;
+                    }
+                }
+
+                let text = "";
+                if (isPastDeadline) {
+                    text = `Đã hết hạn đăng ký ${meal.name} (khóa lúc ${meal.deadline}). Vui lòng liên hệ Quản trị viên nếu cần hỗ trợ.`;
+                } else if (isUrgent) {
+                    text = `🚨 KHẨN CẤP: ${meal.name} sắp đóng cổng đăng ký! Còn ${timeFormatted} (khóa lúc ${meal.deadline}).`;
+                } else {
+                    text = `Bạn chưa đăng ký ${meal.name}. Vui lòng hoàn tất trước ${meal.deadline} (còn ${timeFormatted}).`;
+                }
+
                 reminders.push({
                     mealId: meal.id,
                     mealName: meal.name,
                     deadline: meal.deadline,
-                    text: `Bạn chưa đăng ký ${meal.name}. Vui lòng hoàn tất trước ${meal.deadline}.`
+                    deadlineDate,
+                    isPastDeadline,
+                    isUrgent,
+                    remainingSeconds,
+                    remainingMinutes,
+                    timeFormatted,
+                    text
                 });
             }
         });

@@ -227,5 +227,74 @@ const AdminService = {
                 totalEatingCount
             };
         });
+    },
+
+    // ==========================================
+    // NHẮC NHỞ & XỬ LÝ CHƯA ĐĂNG KÝ
+    // ==========================================
+
+    // Lấy danh sách thành viên chưa đăng ký cho bữa ăn cụ thể trong ngày
+    getUnregisteredMembers(dateStr, mealTypeId) {
+        const activeMembers = DB.getMembers().filter(m => m.isActive);
+        const registrations = DB.getRegistrations().filter(r => 
+            r.mealDate === dateStr && 
+            r.mealType === Number(mealTypeId)
+        );
+
+        return activeMembers.filter(m => {
+            const reg = registrations.find(r => r.memberId === m.id);
+            // Chưa có bản ghi hoặc đã bị gán trạng thái Quá hạn
+            return !reg || reg.status === CONFIG.MEAL_STATUS.NOT_REGISTERED.id;
+        });
+    },
+
+    // Tạo mẫu tin nhắn nhắc nhở đẹp mắt để copy gửi Zalo / Telegram
+    generateReminderMessage(dateStr, mealTypeId) {
+        const mealInfo = getMealTypeInfo(Number(mealTypeId));
+        const unregistered = this.getUnregisteredMembers(dateStr, mealTypeId);
+        const activeMembers = DB.getMembers().filter(m => m.isActive);
+        const dateFormatted = TimeSimulator.formatDateTimeDisplay(new Date(dateStr + "T00:00:00")).split(" ")[0];
+
+        let msg = `🍚 [NHẮC NHỞ ĐĂNG KÝ CƠM] 🍚\n`;
+        msg += `📅 Ngày: ${dateFormatted}\n`;
+        msg += `🍽️ Bữa ăn: ${mealInfo.name.toUpperCase()} (Giờ ăn: ${mealInfo.mealTime})\n`;
+        msg += `⏰ Hạn chốt đăng ký: ${mealInfo.deadline}\n`;
+        msg += `------------------------------------\n`;
+
+        if (unregistered.length === 0) {
+            msg += `🎉 Tuyệt vời! Toàn bộ ${activeMembers.length} thành viên đã hoàn tất đăng ký!\n`;
+        } else {
+            msg += `⚠️ Còn ${unregistered.length}/${activeMembers.length} anh em CHƯA ĐĂNG KÝ:\n`;
+            unregistered.forEach((m, idx) => {
+                const dept = m.department ? ` - ${m.department}` : "";
+                msg += `${idx + 1}. ${m.fullName}${dept}\n`;
+            });
+            msg += `\n👉 Đề nghị anh em vào hệ thống đăng ký ngay trước ${mealInfo.deadline}:\n`;
+            msg += window.location.href.split("#")[0];
+        }
+
+        return msg;
+    },
+
+    // Xuất báo cáo thống kê suất ăn dạng CSV (Excel mở trực tiếp không lỗi font UTF-8 BOM)
+    exportStatisticsCsv(dateStr) {
+        const stats = this.getStatistics(dateStr);
+        const BOM = "\uFEFF";
+        let csv = BOM + `BÁO CÁO THỐNG KÊ SUẤT ĂN NGÀY ${dateStr}\n\n`;
+        csv += "Bữa ăn,Giờ ăn,Ăn đúng giờ,Ăn sau,Không ăn,Chưa đăng ký,Tổng suất dự kiến ăn,Tổng thành viên\n";
+
+        stats.forEach(s => {
+            csv += `"${s.mealInfo.name}","${s.mealInfo.mealTime}",${s.onTimeCount},${s.afterMealCount},${s.noMealCount},${s.notRegisteredCount},${s.totalEatingCount},${s.totalMembers}\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Thong_Ke_Suat_An_${dateStr}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 };

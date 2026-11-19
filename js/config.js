@@ -92,9 +92,7 @@ const CONFIG = {
         USERS: "meal_app_users",
         REGISTRATIONS: "meal_app_registrations",
         HISTORIES: "meal_app_histories",
-        CURRENT_USER: "meal_app_current_user",
-        SIMULATED_TIME: "meal_app_simulated_time",
-        SIMULATION_ACTIVE: "meal_app_simulation_active"
+        CURRENT_USER: "meal_app_current_user"
     }
 };
 

@@ -9,11 +9,20 @@
 ## 🌟 Tính Năng Nổi Bật
 
 - **Đăng ký cơm 3 bữa:** Sáng (chốt 03:30), Trưa (chốt 08:00), Chiều (chốt 14:00).
-- **Cảnh báo & Nhắc nhở:** Tự động cảnh báo thành viên chưa đăng ký khi sắp đến giờ chốt.
-- **Thống kê chuyên nghiệp:** Báo cáo chi tiết số lượng suất ăn theo ngày và theo khoảng thời gian cho nhà bếp/quản lý.
+- **Hệ thống Nhắc nhở Đa kênh thông minh:**
+  - **Đếm ngược thời gian thực:** Đồng hồ đếm ngược từng giây trước giờ khóa và cảnh báo khẩn cấp khi còn < 30 phút.
+  - **Thông báo đẩy trình duyệt (Web Notification):** Tự động phát âm thanh chuông báo và gửi popup nhắc nhở trên máy tính / điện thoại.
+  - **Trung tâm nhắc nhở Quản trị viên:** Tra cứu ngay lập tức ai chưa đăng ký của từng bữa, 1 cú click để sao chép danh sách đẹp mắt gửi vào nhóm chat Zalo.
+  - **Tự động mở nhóm Zalo / Webhook:** Tích hợp gửi thẳng tin nhắn thông báo vào nhóm chat Zalo của đơn vị.
+  - **GitHub Actions Cron Scheduler:** Tự động chạy ngầm gửi tin nhắn trước giờ chốt (03:15, 07:45, 13:45).
+- **Mã QR Vĩnh Viễn & Thống kê Công Khai:**
+  - **Quét xem ngay không cần đăng nhập:** Người ngoài, nhân viên nhà bếp, khách chỉ cần quét mã QR bằng camera điện thoại hoặc Zalo là thấy ngay bảng thống kê số lượng suất ăn mỗi bữa (Sáng, Trưa, Chiều) và danh sách chi tiết người ăn.
+  - **Liên kết cố định vĩnh viễn:** `https://sky-bro-12.github.io/DangKyCom/#public-stats`.
+  - **Tải ảnh & In biển dán tường:** Tích hợp nút tải ảnh mã QR độ phân giải cao (`qr-thong-ke.png`) và tính năng in biển A4 có khung hướng dẫn dán tại cửa nhà bếp/phòng ăn.
+- **Thống kê chuyên nghiệp:** Báo cáo chi tiết số lượng suất ăn theo ngày, xuất file Excel (CSV) và in phiếu báo cáo cho nhà bếp.
 - **Quản trị & Phân quyền:**
   - Thành viên tự đăng ký và xem lịch sử của mình.
-  - Quản trị viên (Admin) có quyền đăng ký thay (Audit Log lưu vết), quản lý 100 thành viên và cấp tài khoản.
+  - Quản trị viên (Admin) có quyền đăng ký thay (Audit Log lưu vết), nhập danh sách thành viên hàng loạt (Bulk Import) và tự động cấp tài khoản cho 100 thành viên.
 - **Thời gian thực (Realtime):** Đồng bộ dữ liệu tức thì giữa điện thoại và máy tính không cần tải lại trang.
 - **Chi phí 0 VNĐ:** Chạy hoàn toàn trên GitHub Pages & Firebase Free Tier.
 
