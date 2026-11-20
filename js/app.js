@@ -1134,9 +1134,11 @@ printQrPoster() {
         </head>
         <body>
             <div class="poster-frame">
-                <div class="icon">🍚</div>
-                <h1>HỆ THỐNG ĐĂNG KÝ CƠM HẰNG NGÀY</h1>
-                <h2>BẢNG THỐNG KÊ SUẤT ĂN CÔNG KHAI</h2>
+                <div style="margin-bottom: 8px;">
+                    <img src="assets/icon-192.png" alt="Logo" style="width: 85px; height: 85px; border-radius: 50%; border: 3px solid #198754; object-fit: contain;">
+                </div>
+                <h1>CỘNG ĐOÀN DỰ TU BIÊN HÒA</h1>
+                <h2 style="color: #198754; font-weight: bold; margin: 4px 0 16px;">BẢNG THỐNG KÊ SUẤT ĂN CÔNG KHAI</h2>
                 <div class="badge">⚡ KHÔNG CẦN TÀI KHOẢN • KHÔNG CẦN ĐĂNG NHẬP</div>
                 <div>
                     <img class="qr-img" src="${dataUrl}" alt="Mã QR Thống Kê">

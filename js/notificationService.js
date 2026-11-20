@@ -44,8 +44,8 @@ const NotificationService = {
         try {
             const notif = new Notification(title, {
                 body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/3170/3170733.png",
-                badge: "https://cdn-icons-png.flaticon.com/512/3170/3170733.png",
+                icon: "assets/icon-192.png",
+                badge: "assets/favicon-32x32.png",
                 tag: options.tag || "meal-reminder",
                 renotify: true,
                 ...options

@@ -1,0 +1,26 @@
+{
+  "name": "Đăng Ký Cơm - Cộng đoàn Dự tu Biên Hòa",
+  "short_name": "Đăng Ký Cơm",
+  "description": "Hệ thống quản lý và đăng ký cơm hằng ngày dành cho Cộng đoàn Dự tu Biên Hòa",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#198754",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
