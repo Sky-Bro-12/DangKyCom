@@ -1,26 +1,16 @@
 /**
- * firebase-config.js - Cấu hình Google Firebase Firestore Database
- * 
- * HƯỚNG DẪN LẤY CẤU HÌNH MIỄN PHÍ TRONG 2 PHÚT:
- * 1. Mở trình duyệt và truy cập: https://console.firebase.google.com/
- * 2. Đăng nhập tài khoản Google và bấm "Add project" (Thêm dự án) -> Đặt tên (ví dụ: "DangKyCom")
- * 3. Bấm vào menu bên trái: "Build" -> "Firestore Database" -> Bấm "Create database"
- *    - Chọn vị trí server: asia-southeast1 (Singapore) để tốc độ tại Việt Nam nhanh nhất (<50ms).
- *    - Chọn chế độ "Start in test mode" (hoặc Production mode).
- * 4. Bấm vào biểu tượng Bánh răng (Project Settings) ở góc trên bên trái -> Cuộn xuống mục "Your apps"
- *    - Bấm vào biểu tượng Web (</>)
- *    - Đặt tên App (ví dụ: "DangKyCom Web")
- *    - Sao chép toàn bộ object `firebaseConfig` và dán thay thế vào bên dưới.
+ * firebase-config.js - Cấu hình Google Firebase Firestore Database (Online)
+ * Dự án: dangkycom-f7ebe (Cộng đoàn Dự tu Biên Hòa)
  */
 
 const FIREBASE_CONFIG = {
-    // DÁN THÔNG TIN FIREBASE CONFIG CỦA BẠN VÀO ĐÂY:
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBnto8gvDBgSTQjXeWZ0PPsVegfYWZQ__c",
+    authDomain: "dangkycom-f7ebe.firebaseapp.com",
+    projectId: "dangkycom-f7ebe",
+    storageBucket: "dangkycom-f7ebe.firebasestorage.app",
+    messagingSenderId: "552516728576",
+    appId: "1:552516728576:web:ef86a5f0243892823a25e5",
+    measurementId: "G-THRKJV6VNL"
 };
 
 /**
